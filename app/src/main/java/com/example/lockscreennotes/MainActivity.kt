@@ -73,17 +73,25 @@ class MainActivity : ComponentActivity() {
 
     @SuppressLint("ResourceType")
     private fun showNotification() {
-        setupNotification(this, 3, R.layout.notification4)
+        //Log.d("ABOBA", R.id::class.java.getDeclaredField("button_q").get(null)!!.toString() + "\n" + R.id.button_q)
+
+        setupNotification(this, 0, listOf("space", "send", "clear"), R.layout.notification4)
         // setWhen() DOES NOT WORK
         Thread.sleep(20)
 
-        setupNotification(this, 2, R.layout.notification3)
+        setupNotification(this, 20, listOf("digit", *("zxcvbnm".map { it.toString() }.toTypedArray()), "bs"), R.layout.notification3)
         Thread.sleep(20)
 
-        setupNotification(this, 1, R.layout.notification2)
+        setupNotification(this, 40, "asdfghjkl".map { it.toString() }, R.layout.notification2)
         Thread.sleep(20)
 
-        setupNotification(this, 0, R.layout.notification)
+        val prefs = getSharedPreferences("CurrentNote", Context.MODE_PRIVATE)
+        val curMode = prefs.getString("mode", "text")!!
+        if(curMode == "text") {
+            setupNotification(this, 80, "qwertyuiop".map { it.toString() }, R.layout.notification)
+        } else {
+            setupNotification(this, 80, "1234567890".map { it.toString() }, R.layout.notification_digit)
+        }
         Thread.sleep(20)
 
         run {
@@ -131,15 +139,18 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-fun setupNotification(ctx: Context, offset: Int, layout: Int) {
-    val i1 = Intent(ctx, MyBroadcastReceiver::class.java).apply { this.putExtra("button", (offset * 3 + 0)) }
-    val i2 = Intent(ctx, MyBroadcastReceiver::class.java).apply { this.putExtra("button", (offset * 3 + 1)) }
-    val i3 = Intent(ctx, MyBroadcastReceiver::class.java).apply { this.putExtra("button", (offset * 3 + 2)) }
-
+fun setupNotification(ctx: Context, offset: Int, buttons: List<String>, layout: Int) {
     val remoteView = RemoteViews(ctx.packageName, layout)
-    remoteView.setOnClickPendingIntent(R.id.button1, PendingIntent.getBroadcast(ctx, offset * 3 + 0, i1, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE))
-    remoteView.setOnClickPendingIntent(R.id.button2, PendingIntent.getBroadcast(ctx, offset * 3 + 1, i2, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE))
-    remoteView.setOnClickPendingIntent(R.id.button3, PendingIntent.getBroadcast(ctx, offset * 3 + 2, i3, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE))
+    for(i in 0 until buttons.size) {
+        val name = buttons[i]
+
+        val intent = Intent(ctx, MyBroadcastReceiver::class.java).apply { this.putExtra("button", name) }
+
+        remoteView.setOnClickPendingIntent(
+            R.id::class.java.getDeclaredField("button_" + name).get(null) as Int,
+            PendingIntent.getBroadcast(ctx, offset + i, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE)
+        )
+    }
 
     val notification = NotificationCompat.Builder(ctx, CHANNEL_ID)
         .setSmallIcon(android.R.drawable.ic_dialog_info)
@@ -153,58 +164,45 @@ fun setupNotification(ctx: Context, offset: Int, layout: Int) {
 }
 
 class MyBroadcastReceiver : BroadcastReceiver() {
-    private val values = arrayOf(
-        arrayOf(",", ".", "?", "!"),
-        arrayOf("a", "b", "c"),
-        arrayOf("d", "e", "f"),
-        arrayOf("g", "h", "i"),
-        arrayOf("j", "k", "l"),
-        arrayOf("m", "n", "o"),
-        arrayOf("p", "q", "r", "s"),
-        arrayOf("t", "u", "v"),
-        arrayOf("w", "x", "y", "z"),
-    )
     override fun onReceive(context: Context, intent: Intent) {
         val prefs = context.getSharedPreferences("CurrentNote", Context.MODE_PRIVATE)
-
         val saveDir = prefs.getString("saveDir", "")!!
-
         var text = prefs.getString("text", "")!!
-        var lastPress = prefs.getLong("lastPress", 0)
-        var lastButton = prefs.getInt("lastButton", -2)
-        var lastAdvance = prefs.getInt("lastAdvance", 0)
+        var curMode = prefs.getString("mode", "text")!!
 
-        val currentPress = System.currentTimeMillis()
-        val duration = currentPress - lastPress
-
-        var button = intent.getIntExtra("button", -1)
-        if(button >= 0 && button < 9) {
-            val chars = values[button]
-            if(button == lastButton && duration < 1000) {
-                lastAdvance = (lastAdvance + 1) % chars.size
-                text = text.substring(0, text.length - 1) + chars[lastAdvance]
-            }
-            else {
-                lastAdvance = 0
-                text += chars[lastAdvance]
-            }
+        var button = intent.getStringExtra("button")!!
+        if(button.length == 1 && button[0] >= 'a' && button[0] <= 'z') {
+            text += button
         }
-        else if(button == 9) {
-            saveFile(text, context, saveDir, currentPress)
-            lastAdvance = 0
-            text = ""
+        else if(button.length == 1 && button[0] >= '0' && button[0] <= '9') {
+            text += button
         }
-        else if(button == 10) {
-            lastAdvance = 0
-            text += " "
+        else if(button == "digit") {
+            curMode = if(curMode == "text") "digit" else "text"
         }
-        else if(button == 11) {
-            lastAdvance = 0
+        else if(button == "bs") {
             text = text.substring(0, text.length - 1)
         }
+        else if(button == "space") {
+            text += " "
+        }
+        else if(button == "send") {
+            saveFile(text, context, saveDir)
+            text = ""
+            curMode = "text"
+        }
+        else if(button == "clear") {
+            text = ""
+        }
 
-        lastButton = button
-        lastPress = currentPress
+        if(curMode != prefs.getString("mode", "text")) {
+            if(curMode == "text") {
+                setupNotification(context, 80, "qwertyuiop".map { it.toString() }, R.layout.notification)
+            } else {
+                setupNotification(context, 80, "1234567890".map { it.toString() }, R.layout.notification_digit)
+            }
+            Thread.sleep(20)
+        }
 
         val notification = NotificationCompat.Builder(context, "channel_id_2")
             .setSmallIcon(android.R.drawable.ic_dialog_info)
@@ -220,19 +218,17 @@ class MyBroadcastReceiver : BroadcastReceiver() {
 
         prefs.edit() {
             putString("text", text)
-            putLong("lastPress", lastPress)
-            putInt("lastButton", lastButton)
-            putInt("lastAdvance", lastAdvance)
+            putString("mode", curMode)
         }
     }
 }
 
 @SuppressLint("NewApi")
-fun saveFile(text: String, ctx: Context, saveDir: String, time: Long) {
+fun saveFile(text: String, ctx: Context, saveDir: String) {
     try {
         val formatter = DateTimeFormatter.ofPattern("yy-MM-dd HH:mm:ss.SSS")
             .withZone(ZoneId.systemDefault())
-        val filename = formatter.format(Instant.ofEpochMilli(time)) + ".txt"
+        val filename = formatter.format(Instant.ofEpochMilli(System.currentTimeMillis())) + ".txt"
 
         // Why do I need to convert string to url to string to url using the string and url?
         // Job security.

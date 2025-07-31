@@ -5,25 +5,32 @@
     android:columnCount="3"
     android:id="@+id/root"
 >
-    <Button
-        android:id="@+id/button1"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:text="Send" />
 
     <Button
-        android:id="@+id/button2"
+        android:id="@+id/button_clear"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_weight="1"
+        android:background="@drawable/no_corners"
+        android:textColor="@color/white"
+        android:text="Clear" />
+
+    <Button
+        android:id="@+id/button_space"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_weight="20"
+        android:background="@drawable/no_corners"
+        android:textColor="@color/white"
         android:text="Space" />
 
     <Button
-        android:id="@+id/button3"
+        android:id="@+id/button_send"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:text="Delete" />
+        android:background="@drawable/no_corners"
+        android:textColor="@color/white"
+        android:text="Send" />
 
 </LinearLayout>

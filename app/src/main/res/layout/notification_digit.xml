@@ -5,95 +5,94 @@
     android:columnCount="3"
     android:id="@+id/root"
 >
-    <!-- DeClArAtIvE -->
     <Button
-        android:id="@+id/button_q"
+        android:id="@+id/button_1"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_weight="1"
         android:background="@drawable/no_corners"
         android:textColor="@color/white"
-        android:text="q" />
+        android:text="1" />
 
     <Button
-        android:id="@+id/button_w"
+        android:id="@+id/button_2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_weight="1"
         android:background="@drawable/no_corners"
         android:textColor="@color/white"
-        android:text="w" />
+        android:text="2" />
 
     <Button
-        android:id="@+id/button_e"
+        android:id="@+id/button_3"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_weight="1"
         android:background="@drawable/no_corners"
         android:textColor="@color/white"
-        android:text="e" />
+        android:text="3" />
 
     <Button
-        android:id="@+id/button_r"
+        android:id="@+id/button_4"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_weight="1"
         android:background="@drawable/no_corners"
         android:textColor="@color/white"
-        android:text="r" />
+        android:text="4" />
 
     <Button
-        android:id="@+id/button_t"
+        android:id="@+id/button_5"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="0dp"
         android:layout_weight="1"
         android:background="@drawable/no_corners"
         android:textColor="@color/white"
-        android:text="t" />
+        android:text="5" />
 
     <Button
-        android:id="@+id/button_y"
+        android:id="@+id/button_6"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_weight="1"
         android:background="@drawable/no_corners"
         android:textColor="@color/white"
-        android:text="y" />
+        android:text="6" />
 
     <Button
-        android:id="@+id/button_u"
+        android:id="@+id/button_7"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_weight="1"
         android:background="@drawable/no_corners"
         android:textColor="@color/white"
-        android:text="u" />
+        android:text="7" />
 
     <Button
-        android:id="@+id/button_i"
+        android:id="@+id/button_8"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_weight="1"
         android:background="@drawable/no_corners"
         android:textColor="@color/white"
-        android:text="i" />
+        android:text="8" />
 
     <Button
-        android:id="@+id/button_o"
+        android:id="@+id/button_9"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_weight="1"
         android:background="@drawable/no_corners"
         android:textColor="@color/white"
-        android:text="o" />
+        android:text="9" />
 
     <Button
-        android:id="@+id/button_p"
+        android:id="@+id/button_0"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_weight="1"
         android:background="@drawable/no_corners"
         android:textColor="@color/white"
-        android:text="p" />
+        android:text="0" />
 </LinearLayout>
