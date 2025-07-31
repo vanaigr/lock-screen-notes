@@ -7,6 +7,7 @@ import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -50,8 +51,14 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-        createNotificationChannel()
-        showNotification()
+        createNotificationChannel(this)
+
+        val screenReceiver = ScreenReceiver()
+        val filter = IntentFilter().apply {
+            addAction(Intent.ACTION_SCREEN_OFF)
+            addAction(Intent.ACTION_USER_PRESENT)
+        }
+        registerReceiver(screenReceiver, filter)
     }
 
     @SuppressLint("MissingSuperCall")
@@ -69,67 +76,64 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+}
 
+@SuppressLint("ResourceType")
+private fun showNotification(ctx: Context) {
+    setupNotification(ctx, 0, listOf("space", "send", "clear"), R.layout.notification4)
+    // setWhen() DOES NOT WORK
+    Thread.sleep(20)
 
-    @SuppressLint("ResourceType")
-    private fun showNotification() {
-        //Log.d("ABOBA", R.id::class.java.getDeclaredField("button_q").get(null)!!.toString() + "\n" + R.id.button_q)
+    setupNotification(ctx, 20, listOf("digit", *("zxcvbnm".map { it.toString() }.toTypedArray()), "bs"), R.layout.notification3)
+    Thread.sleep(20)
 
-        setupNotification(this, 0, listOf("space", "send", "clear"), R.layout.notification4)
-        // setWhen() DOES NOT WORK
-        Thread.sleep(20)
+    setupNotification(ctx, 40, "asdfghjkl".map { it.toString() }, R.layout.notification2)
+    Thread.sleep(20)
 
-        setupNotification(this, 20, listOf("digit", *("zxcvbnm".map { it.toString() }.toTypedArray()), "bs"), R.layout.notification3)
-        Thread.sleep(20)
-
-        setupNotification(this, 40, "asdfghjkl".map { it.toString() }, R.layout.notification2)
-        Thread.sleep(20)
-
-        val prefs = getSharedPreferences("CurrentNote", Context.MODE_PRIVATE)
-        val curMode = prefs.getString("mode", "text")!!
-        if(curMode == "text") {
-            setupNotification(this, 80, "qwertyuiop".map { it.toString() }, R.layout.notification)
-        } else {
-            setupNotification(this, 80, "1234567890".map { it.toString() }, R.layout.notification_digit)
-        }
-        Thread.sleep(20)
-
-        run {
-            val prefs = this.getSharedPreferences("CurrentNote", Context.MODE_PRIVATE)
-            var text = prefs.getString("text", "")!!
-
-            val notification = NotificationCompat.Builder(this, "channel_id_2")
-                .setSmallIcon(android.R.drawable.ic_dialog_info)
-                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-                .setContentTitle("")
-                .setContentText(if(text.isEmpty()) " " else text)
-                .setAutoCancel(true)
-                .build()
-
-            val notificationManager = this.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            notificationManager.notify(123123, notification)
-        }
+    val prefs = ctx.getSharedPreferences("CurrentNote", Context.MODE_PRIVATE)
+    val curMode = prefs.getString("mode", "text")!!
+    if(curMode == "text") {
+        setupNotification(ctx, 80, "qwertyuiop".map { it.toString() }, R.layout.notification)
+    } else {
+        setupNotification(ctx, 80, "1234567890".map { it.toString() }, R.layout.notification_digit)
     }
+    Thread.sleep(20)
 
-    private fun createNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val name = "Default Channel"
-            val descriptionText = "Channel for default notifications"
-            val channel = NotificationChannel(CHANNEL_ID, name, NotificationManager.IMPORTANCE_DEFAULT).apply {
-                description = descriptionText
-            }
-            val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            notificationManager.createNotificationChannel(channel)
+    run {
+        val prefs = ctx.getSharedPreferences("CurrentNote", Context.MODE_PRIVATE)
+        var text = prefs.getString("text", "")!!
+
+        val notification = NotificationCompat.Builder(ctx, "channel_id_2")
+            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setContentTitle("")
+            .setContentText(if(text.isEmpty()) " " else text)
+            .setAutoCancel(true)
+            .build()
+
+        val notificationManager = ctx.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.notify(123123, notification)
+    }
+}
+
+private fun createNotificationChannel(ctx: Context) {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        val name = "Default Channel"
+        val descriptionText = "Channel for default notifications"
+        val channel = NotificationChannel(CHANNEL_ID, name, NotificationManager.IMPORTANCE_DEFAULT).apply {
+            description = descriptionText
         }
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val name = "Text Channel"
-            val descriptionText = "Channel to separate text from keyboard"
-            val channel = NotificationChannel("channel_id_2", name, NotificationManager.IMPORTANCE_DEFAULT).apply {
-                description = descriptionText
-            }
-            val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            notificationManager.createNotificationChannel(channel)
+        val notificationManager = ctx.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.createNotificationChannel(channel)
+    }
+    if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        val name = "Text Channel"
+        val descriptionText = "Channel to separate text from keyboard"
+        val channel = NotificationChannel("channel_id_2", name, NotificationManager.IMPORTANCE_DEFAULT).apply {
+            description = descriptionText
         }
+        val notificationManager = ctx.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.createNotificationChannel(channel)
     }
 }
 
@@ -244,5 +248,19 @@ fun saveFile(text: String, ctx: Context, saveDir: String) {
     }
     catch (err: Throwable) {
         err.printStackTrace()
+    }
+}
+
+class ScreenReceiver : BroadcastReceiver() {
+    override fun onReceive(context: Context, intent: Intent) {
+        when (intent.action) {
+            Intent.ACTION_SCREEN_OFF -> {
+                showNotification(context)
+            }
+            Intent.ACTION_USER_PRESENT -> {
+                val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                manager.cancelAll()
+            }
+        }
     }
 }

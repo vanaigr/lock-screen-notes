@@ -26,6 +26,7 @@
             </intent-filter>
         </activity>
         <receiver android:name="com.example.lockscreennotes.MyBroadcastReceiver" />
+        <receiver android:name="com.example.lockscreennotes.ScreenReceiver" />
     </application>
 
 </manifest>
