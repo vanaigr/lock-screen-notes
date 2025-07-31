@@ -97,16 +97,12 @@ class MainActivity : ComponentActivity() {
         run {
             val prefs = this.getSharedPreferences("CurrentNote", Context.MODE_PRIVATE)
             var text = prefs.getString("text", "")!!
-            if(text.isEmpty()) {
-                text = "<type your text below>"
-            }
 
             val notification = NotificationCompat.Builder(this, "channel_id_2")
                 .setSmallIcon(android.R.drawable.ic_dialog_info)
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                 .setContentTitle("")
-                .setContentText(text)
-                .setGroup("com.example.lockscreennotes.text")
+                .setContentText(if(text.isEmpty()) " " else text)
                 .setAutoCancel(true)
                 .build()
 
@@ -119,8 +115,7 @@ class MainActivity : ComponentActivity() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val name = "Default Channel"
             val descriptionText = "Channel for default notifications"
-            val importance = NotificationManager.IMPORTANCE_DEFAULT
-            val channel = NotificationChannel(CHANNEL_ID, name, importance).apply {
+            val channel = NotificationChannel(CHANNEL_ID, name, NotificationManager.IMPORTANCE_DEFAULT).apply {
                 description = descriptionText
             }
             val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
@@ -129,8 +124,7 @@ class MainActivity : ComponentActivity() {
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val name = "Text Channel"
             val descriptionText = "Channel to separate text from keyboard"
-            val importance = NotificationManager.IMPORTANCE_DEFAULT
-            val channel = NotificationChannel("channel_id_2", name, importance).apply {
+            val channel = NotificationChannel("channel_id_2", name, NotificationManager.IMPORTANCE_DEFAULT).apply {
                 description = descriptionText
             }
             val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
@@ -156,7 +150,6 @@ fun setupNotification(ctx: Context, offset: Int, buttons: List<String>, layout: 
         .setSmallIcon(android.R.drawable.ic_dialog_info)
         .setPriority(NotificationCompat.PRIORITY_DEFAULT)
         .setCustomContentView(remoteView)
-        .setGroup("com.example.lockscreennotes.buttons_" + offset)
         .build()
 
     val notificationManager = ctx.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
@@ -208,8 +201,7 @@ class MyBroadcastReceiver : BroadcastReceiver() {
             .setSmallIcon(android.R.drawable.ic_dialog_info)
             .setContentTitle("")
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-            .setContentText(text)
-            .setGroup("com.example.lockscreennotes.text")
+            .setContentText(if(text.isEmpty()) " " else text)
             .build()
 
         val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
