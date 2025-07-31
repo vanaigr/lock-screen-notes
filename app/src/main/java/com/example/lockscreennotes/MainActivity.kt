@@ -11,6 +11,7 @@ import android.content.IntentFilter
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.PowerManager
 import android.provider.DocumentsContract
 import android.util.Log
 import android.widget.RemoteViews
@@ -25,14 +26,20 @@ import androidx.compose.material3.Text
 import androidx.compose.ui.Modifier
 import androidx.core.app.NotificationCompat
 import androidx.core.content.edit
+import com.evernote.android.job.Job
+import com.evernote.android.job.JobCreator
+import com.evernote.android.job.JobManager
+import com.evernote.android.job.JobRequest
 import com.example.lockscreennotes.ui.theme.LockScreenNotesTheme
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import java.util.concurrent.TimeUnit
 
 private const val CHANNEL_ID = "channel_id"
 
 class MainActivity : ComponentActivity() {
+    @SuppressLint("NewApi")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -53,12 +60,7 @@ class MainActivity : ComponentActivity() {
 
         createNotificationChannel(this)
 
-        val screenReceiver = ScreenReceiver()
-        val filter = IntentFilter().apply {
-            addAction(Intent.ACTION_SCREEN_OFF)
-            addAction(Intent.ACTION_USER_PRESENT)
-        }
-        registerReceiver(screenReceiver, filter)
+        showNotification(this)
     }
 
     @SuppressLint("MissingSuperCall")
@@ -104,7 +106,7 @@ private fun showNotification(ctx: Context) {
         var text = prefs.getString("text", "")!!
 
         val notification = NotificationCompat.Builder(ctx, "channel_id_2")
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setSmallIcon(R.drawable.ic_android_black_24dp)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setContentTitle("")
             .setContentText(if(text.isEmpty()) " " else text)
@@ -151,7 +153,7 @@ fun setupNotification(ctx: Context, offset: Int, buttons: List<String>, layout: 
     }
 
     val notification = NotificationCompat.Builder(ctx, CHANNEL_ID)
-        .setSmallIcon(android.R.drawable.ic_dialog_info)
+        .setSmallIcon(R.drawable.ic_android_black_24dp)
         .setPriority(NotificationCompat.PRIORITY_DEFAULT)
         .setCustomContentView(remoteView)
         .build()
@@ -202,7 +204,7 @@ class MyBroadcastReceiver : BroadcastReceiver() {
         }
 
         val notification = NotificationCompat.Builder(context, "channel_id_2")
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setSmallIcon(R.drawable.ic_android_black_24dp)
             .setContentTitle("")
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setContentText(if(text.isEmpty()) " " else text)
@@ -251,16 +253,16 @@ fun saveFile(text: String, ctx: Context, saveDir: String) {
     }
 }
 
-class ScreenReceiver : BroadcastReceiver() {
+/*class ScreenReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         when (intent.action) {
             Intent.ACTION_SCREEN_OFF -> {
                 showNotification(context)
             }
-            Intent.ACTION_USER_PRESENT -> {
+            Intent.ACTION_SCREEN_ON -> {
                 val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
                 manager.cancelAll()
             }
         }
     }
-}
+}*/
