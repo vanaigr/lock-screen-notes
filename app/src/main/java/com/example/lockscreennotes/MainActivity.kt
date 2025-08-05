@@ -1,17 +1,16 @@
 package com.example.lockscreennotes
 
 import android.annotation.SuppressLint
+import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.os.PowerManager
 import android.provider.DocumentsContract
 import android.util.Log
 import android.widget.RemoteViews
@@ -25,16 +24,13 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.ui.Modifier
 import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
+import androidx.core.app.RemoteInput
 import androidx.core.content.edit
-import com.evernote.android.job.Job
-import com.evernote.android.job.JobCreator
-import com.evernote.android.job.JobManager
-import com.evernote.android.job.JobRequest
 import com.example.lockscreennotes.ui.theme.LockScreenNotesTheme
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
-import java.util.concurrent.TimeUnit
 
 private const val CHANNEL_ID = "channel_id"
 
@@ -43,13 +39,59 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        val activity = this
+
         setContent {
             LockScreenNotesTheme {
                 Scaffold { padding ->
                     Column(modifier = Modifier.padding(padding)) {
                         Button(onClick = {
-                            val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
-                            startActivityForResult(intent, 30332)
+                            //val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
+                            //startActivityForResult(intent, 30332)
+
+                            Thread.sleep(5000)
+
+                            val remoteInput = RemoteInput.Builder("aboba")
+                                .setLabel("Reply")
+                                .build()
+
+                            val replyIntent = Intent(activity, MyBroadcastReceiver::class.java)
+                            val replyPendingIntent = PendingIntent.getBroadcast(
+                                activity,
+                                0,
+                                replyIntent,
+                                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE
+                            )
+
+                            val action = NotificationCompat.Action.Builder(
+                                android.R.drawable.btn_star,
+                                "Reply",
+                                replyPendingIntent
+                            ).addRemoteInput(remoteInput).build()
+
+                            val fullScreenIntent = Intent(activity, ImportantActivity::class.java)
+                            //fullScreenIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                            val fullScreenPendingIntent = PendingIntent.getActivity(activity, 0,
+                                fullScreenIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+
+                            // https://developer.android.com/develop/ui/views/notifications/build-notification#urgent-message
+                            val notification = NotificationCompat.Builder(activity, "channel_iel")
+                                .setSmallIcon(android.R.drawable.btn_plus)
+                                .setContentTitle("New message")
+                                .setContentIntent(fullScreenPendingIntent)
+                                //.setContentText("You have a new message f,j,fdkg")
+                                //.addAction(action)
+
+                                .setPriority(Notification.PRIORITY_HIGH)
+                                //.setOngoing(true)
+                                .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+                                .setFullScreenIntent(fullScreenPendingIntent, true)
+
+                                .build()
+
+                            val noti = activity.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                            noti.notify(4329, notification)
                         }) {
                             Text("Set directory")
                         }
@@ -60,7 +102,9 @@ class MainActivity : ComponentActivity() {
 
         createNotificationChannel(this)
 
-        showNotification(this)
+
+
+        //showNotification(this)
     }
 
     @SuppressLint("MissingSuperCall")
@@ -132,6 +176,15 @@ private fun createNotificationChannel(ctx: Context) {
         val name = "Text Channel"
         val descriptionText = "Channel to separate text from keyboard"
         val channel = NotificationChannel("channel_id_2", name, NotificationManager.IMPORTANCE_DEFAULT).apply {
+            description = descriptionText
+        }
+        val notificationManager = ctx.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.createNotificationChannel(channel)
+    }
+    if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        val name = "yell at me Channel"
+        val descriptionText = "here peoples yel(low or high)"
+        val channel = NotificationChannel("channel_iel", name, NotificationManager.IMPORTANCE_HIGH).apply {
             description = descriptionText
         }
         val notificationManager = ctx.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager

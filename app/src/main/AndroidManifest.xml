@@ -3,6 +3,9 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <!-- https://developer.android.com/develop/ui/views/notifications/build-notification#urgent-message -->
+    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <application
@@ -25,6 +28,15 @@
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+        </activity>
+        <!-- https://stackoverflow.com/a/69314329 -->
+        <activity
+            android:name=".ImportantActivity"
+            android:showOnLockScreen="true"
+            android:showWhenLocked="true"
+            android:exported="true"
+            android:label="Thi"
+            android:theme="@style/Theme.LockScreenNotes">
         </activity>
         <receiver android:name="com.example.lockscreennotes.MyBroadcastReceiver" />
         <receiver android:exported="true" android:name=".ScreenReceiver" />
