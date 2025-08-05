@@ -34,12 +34,11 @@
             android:name=".ImportantActivity"
             android:showOnLockScreen="true"
             android:showWhenLocked="true"
+            android:windowSoftInputMode="adjustNothing"
             android:exported="true"
             android:label="Thi"
             android:theme="@style/Theme.LockScreenNotes">
         </activity>
-        <receiver android:name="com.example.lockscreennotes.MyBroadcastReceiver" />
-        <receiver android:exported="true" android:name=".ScreenReceiver" />
     </application>
 
 </manifest>
