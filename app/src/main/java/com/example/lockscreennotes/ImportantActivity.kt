@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.content.Context.MODE_PRIVATE
-import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.widget.Toast
@@ -22,18 +21,13 @@ import com.example.lockscreennotes.ui.theme.LockScreenNotesTheme
 import android.os.Build
 import android.provider.DocumentsContract
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.consumeWindowInsets
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.text.input.TextFieldState
-import androidx.compose.foundation.text.input.rememberTextFieldState
-import androidx.compose.material3.ButtonColors
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.runtime.Composable
@@ -43,14 +37,18 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.unit.Dp
 import androidx.core.content.edit
-import androidx.core.view.WindowCompat
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+
+val textColorD = Color(0xff808080)
+val bgColorD = Color.Black
+
+val textColorL = Color(0xff050505)
+val bgColorL = Color(0xfff0f0f0)
+
 
 class ImportantActivity : ComponentActivity() {
 
@@ -84,56 +82,78 @@ fun Content(padding: PaddingValues) {
 
     var note by remember {
         val initialText = (context as? Activity)?.run {
-            getSharedPreferences("CurrentNote", MODE_PRIVATE).getString("text", "")
+            var text = getSharedPreferences("CurrentNote", MODE_PRIVATE).getString("text", "")!!
+            if(text.endsWith("\n\n").not()) text += "\n\n"
+            text
         }
 
         mutableStateOf(TextFieldValue(initialText ?: ""))
     }
+    var isLight by remember { mutableStateOf(false) }
+
+    val bgColor = if(isLight) bgColorL else bgColorD
+    val textColor = if(isLight) textColorL else textColorD
 
     // https://stackoverflow.com/a/77354483
-    Column(modifier = Modifier.background(Color.Black).padding(padding).consumeWindowInsets(padding).imePadding()) {
-        TextField(
-            note,
-            { it: TextFieldValue ->
-                note = it
-                (context as? Activity)?.run {
-                    val prefs = this.getSharedPreferences("CurrentNote", MODE_PRIVATE)
-                    prefs.edit() { putString("text", it.text) }
-                }
-            },
-            Modifier.fillMaxWidth().weight(1f),
-            colors = OutlinedTextFieldDefaults.colors(
-                unfocusedContainerColor = Color.Black,
-                focusedContainerColor = Color.Black,
-                unfocusedBorderColor = Color.Black,
-                focusedBorderColor = Color.Black,
-            ),
-        )
+    Column(modifier = Modifier.background(bgColor).padding(padding).consumeWindowInsets(padding).imePadding()) {
         Row {
-            Button(
-                onClick = { (context as? Activity)?.finish() },
-                Modifier.weight(1f),
-                colors = ButtonDefaults.buttonColors(containerColor = Color.Black, contentColor = Color.White),
-            ) {
-                Text("Close")
-            }
-            Spacer(Modifier.width(Dp(10f)))
             Button(
                 onClick = {
                     val prefs = context.getSharedPreferences("CurrentNote", MODE_PRIVATE)
-                    if(saveFile(note.text, context, prefs.getString("saveDir", "")!!)) {
+                    if (saveFile(note.text, context, prefs.getString("saveDir", "")!!)) {
                         note = TextFieldValue()
                         (context as? Activity)?.run {
                             val prefs = this.getSharedPreferences("CurrentNote", MODE_PRIVATE)
                             prefs.edit() { putString("text", "") }
+                            WidgetProvider.updateAllWidgets(this)
                         }
                     }
                 },
                 Modifier.weight(1f),
-                colors = ButtonDefaults.buttonColors(containerColor = Color.Black, contentColor = Color.White),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = bgColor,
+                    contentColor = textColor
+                ),
             ) {
-                Text("Save")
+                Text("Save and clear")
             }
+            Button(
+                onClick = { isLight = !isLight },
+                Modifier.weight(1f),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = bgColor,
+                    contentColor = textColor
+                ),
+                ) {
+                Text("Switch light/dark")
+            }
+        }
+        TextField(
+            value = note,
+            onValueChange = { it: TextFieldValue ->
+                note = it
+                (context as? Activity)?.run {
+                    val prefs = this.getSharedPreferences("CurrentNote", MODE_PRIVATE)
+                    prefs.edit() { putString("text", it.text) }
+                    WidgetProvider.updateAllWidgets(this)
+                }
+            },
+            modifier = Modifier.fillMaxWidth().weight(1f),
+            colors = OutlinedTextFieldDefaults.colors(
+                unfocusedContainerColor = bgColor,
+                focusedContainerColor = bgColor,
+                unfocusedBorderColor = bgColor,
+                focusedBorderColor = bgColor,
+                unfocusedTextColor = textColor,
+                focusedTextColor = textColor,
+            ),
+        )
+        Button(
+            onClick = { (context as? Activity)?.finish() },
+            Modifier.fillMaxWidth(),
+            colors = ButtonDefaults.buttonColors(containerColor = bgColor, contentColor = textColor),
+        ) {
+            Text("Close")
         }
     }
 }
